@@ -3,6 +3,7 @@ package viewer;
 import org.sqlite.SQLiteDataSource;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -10,12 +11,20 @@ import java.util.ArrayList;
 
 public class SQLiteViewer extends JFrame {
     final Dimension iconDimension = new Dimension(32, 32);
+
     //open file panel vars
     final JPanel filePanel = new JPanel();
     final FlowLayout filePanelFlowLayout = new FlowLayout();
     final ImageIcon openImageIcon = new ImageIcon("SQLite Viewer/task/resources/open.png");
     final JTextField fileNameTextField = new JTextField();
     final JButton openFileButton = new JButton(openImageIcon);
+
+    //table vars
+    ArrayList<String> queryTableColumns;
+    ArrayList<ArrayList<Object>> queryTableData;
+    TableModel dataBaseTableModel;
+    JTable dataBaseTable;
+    JScrollPane dbTableScrollPane;
 
     //data base viewer panel
     final JPanel dataBasePanel = new JPanel();
@@ -29,8 +38,12 @@ public class SQLiteViewer extends JFrame {
         getDataBaseTableNames();
         addTableNamesToComboBox();
     };
-    final ActionListener executeQueryActionListener = e -> addTableNamesToComboBox();
     final ActionListener tablesComboBoxActionListener = e -> generateSelectQueryForTable();
+    final ActionListener executeQueryButtonActionListener = e -> {
+        getQueryColumnsNames();
+        createTableModelFromQuery();
+        updateTableViewer();
+    };
 
 
     public SQLiteViewer() {
@@ -42,6 +55,7 @@ public class SQLiteViewer extends JFrame {
         setLayout(new BorderLayout());
         addOpenFilePanel();
         addDataBasePanel();
+        addTableViewer();
 
         setVisible(true);
     }
@@ -63,6 +77,7 @@ public class SQLiteViewer extends JFrame {
         filePanel.add(openFileButton);
 
         openFileButton.addActionListener(openFileActionListener);
+
         add(filePanel, BorderLayout.NORTH);
     }
 
@@ -85,10 +100,25 @@ public class SQLiteViewer extends JFrame {
         dataBasePanel.add(queryTextArea);
         dataBasePanel.add(executeQueryButton);
 
-        executeQueryButton.addActionListener(executeQueryActionListener);
+        executeQueryButton.addActionListener(executeQueryButtonActionListener);
         tablesComboBox.addActionListener(tablesComboBoxActionListener);
 
         add(dataBasePanel, BorderLayout.CENTER);
+    }
+
+    private void addTableViewer() {
+        dataBaseTable = new JTable();
+        dataBaseTable.setName("Table");
+        dataBaseTable.setAutoCreateRowSorter(true);
+
+        dbTableScrollPane = new JScrollPane(dataBaseTable);
+        add(dbTableScrollPane, BorderLayout.SOUTH);
+    }
+
+    private void updateTableViewer() {
+        dataBaseTable.setModel(dataBaseTableModel);
+        dataBaseTable.updateUI();
+        dbTableScrollPane.updateUI();
     }
 
     private void getDataBaseTableNames() {
@@ -110,6 +140,30 @@ public class SQLiteViewer extends JFrame {
         }
     }
 
+    private void getQueryColumnsNames() {
+        String url = "jdbc:sqlite:" + fileNameTextField.getText();
+
+        //get query from comboBox item
+        String tableName = (String) tablesComboBox.getSelectedItem();
+        String query = "PRAGMA table_info(" + tableName + ");";
+
+        SQLiteDataSource dataSource = new SQLiteDataSource();
+        dataSource.setUrl(url);
+
+        queryTableColumns = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection()) {
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet resultSet = statement.executeQuery(query)) {
+                    while (resultSet.next()) {
+                        queryTableColumns.add(resultSet.getString("name"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void addTableNamesToComboBox() {
         tablesComboBox.removeAllItems();
         for (var str : tableNames) {
@@ -122,6 +176,40 @@ public class SQLiteViewer extends JFrame {
     private void generateSelectQueryForTable() {
         if (tablesComboBox.getItemCount() > 0) {
             queryTextArea.setText("SELECT * FROM " + tablesComboBox.getSelectedItem() + ";");
+        }
+    }
+
+    private void createTableModelFromQuery() {
+        String url = "jdbc:sqlite:" + fileNameTextField.getText(); //database path
+
+        //check if query text box initiated, then get the query
+        if (tablesComboBox.getItemCount() > 0) {
+            queryTextArea.setText("SELECT * FROM " + tablesComboBox.getSelectedItem() + ";");
+        }
+        String query = queryTextArea.getText();
+
+        //set data base source
+        SQLiteDataSource dataSource = new SQLiteDataSource();
+        dataSource.setUrl(url);
+
+        //process the query
+        queryTableData = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection()) {
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet resultSet = statement.executeQuery(query)) {
+                    int colsNumber = queryTableColumns.size();
+                    while (resultSet.next()) {
+                        ArrayList<Object> tmp = new ArrayList<>();
+                        for (int colsIndex = 1; colsIndex <= colsNumber; colsIndex++) {
+                            tmp.add(resultSet.getString(colsIndex));
+                        }
+                        queryTableData.add(tmp);
+                    }
+                    dataBaseTableModel = new DataBaseTableModel(queryTableColumns, queryTableData);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

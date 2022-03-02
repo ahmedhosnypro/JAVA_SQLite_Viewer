@@ -1,35 +1,6 @@
 type: edu
 custom_name: What's inside?
 files:
-- name: src/viewer/ApplicationRunner.java
-  visible: true
-  text: |
-    package viewer;
-
-    public class ApplicationRunner {
-        public static void main(String[] args) {
-            new SQLiteViewer();
-        }
-    }
-  learner_created: false
-- name: src/viewer/SQLiteViewer.java
-  visible: true
-  text: |
-    package viewer;
-
-    import javax.swing.*;
-
-    public class SQLiteViewer extends JFrame {
-
-        public SQLiteViewer() {
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setSize(700, 900);
-            setLayout(null);
-            setResizable(false);
-            setLocationRelativeTo(null);
-        }
-    }
-  learner_created: false
 - name: test/ViewerTest.java
   visible: false
   text: |-
@@ -334,6 +305,44 @@ files:
         }
     }
   learner_created: false
+- name: src/open.png
+  visible: true
+  learner_created: true
+- name: src/viewer/ApplicationRunner.java
+  visible: true
+  text: |
+    package viewer;
+
+    public class ApplicationRunner {
+        public static void main(String[] args) {
+            new SQLiteViewer();
+        }
+    }
+  learner_created: false
+- name: src/viewer/DataBaseTableModel.java
+  visible: true
+  learner_created: true
+- name: src/viewer/SQLiteViewer.java
+  visible: true
+  text: |
+    package viewer;
+
+    import javax.swing.*;
+
+    public class SQLiteViewer extends JFrame {
+
+        public SQLiteViewer() {
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            setSize(700, 900);
+            setLayout(null);
+            setResizable(false);
+            setLocationRelativeTo(null);
+        }
+    }
+  learner_created: false
 feedback_link: https://hyperskill.org/learn/step/12772#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Wed, 02 Mar 2022 23:08:19 UTC
 record: -1

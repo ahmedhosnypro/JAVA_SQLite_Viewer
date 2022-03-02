@@ -9,6 +9,8 @@
       <module name="SQLite_Viewer.SQLite_Viewer-task-build-test-results.main" target="11" />
       <module name="SQLite_Viewer.SQLite_Viewer-task-build-tmp.main" target="11" />
       <module name="SQLite_Viewer.SQLite_Viewer-task.main" target="11" />
+      <module name="SQLite_Viewer.Topics-JTable-Theory.main" target="11" />
+      <module name="SQLite_Viewer.Topics-JTable-Triangle_coordinates.main" target="11" />
       <module name="SQLite_Viewer.Topics-Multidimensional_array-Cinema.main" target="11" />
       <module name="SQLite_Viewer.Topics-Multidimensional_array-Create_cube.main" target="11" />
       <module name="SQLite_Viewer.Topics-Multidimensional_array-Fill_the_matrix_by_numbers.main" target="11" />
