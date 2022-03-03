@@ -93,8 +93,10 @@ public class SQLiteViewer extends JFrame {
         queryTextArea.setMinimumSize(queryTextAreaDimension);
         queryTextArea.setMaximumSize(queryTextAreaDimension);
         queryTextArea.setPreferredSize(queryTextAreaDimension);
+        queryTextArea.setEnabled(false);
 
         executeQueryButton.setName("ExecuteQueryButton");
+        executeQueryButton.setEnabled(false);
 
         dataBasePanel.add(tablesComboBox);
         dataBasePanel.add(queryTextArea);
@@ -126,12 +128,22 @@ public class SQLiteViewer extends JFrame {
         SQLiteDataSource dataSource = new SQLiteDataSource();
         dataSource.setUrl(url);
 
+        queryTextArea.setEnabled(false);
+        executeQueryButton.setEnabled(false);
         tableNames = new ArrayList<>();
         try (Connection connection = dataSource.getConnection()) {
-            try (Statement statement = connection.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")) {
-                    while (resultSet.next()) {
-                        tableNames.add(resultSet.getString("name"));
+            if (connection.isValid(5)) {
+                try (Statement statement = connection.createStatement()) {
+                    try (ResultSet resultSet = statement.executeQuery("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")) {
+                        while (resultSet.next()) {
+                            tableNames.add(resultSet.getString("name"));
+                        }
+                        if (tableNames.size() == 0) {
+                            JOptionPane.showMessageDialog(new Frame(), "File doesn't exist or empty database");
+                        } else {
+                            queryTextArea.setEnabled(true);
+                            executeQueryButton.setEnabled(true);
+                        }
                     }
                 }
             }
@@ -157,6 +169,9 @@ public class SQLiteViewer extends JFrame {
                     while (resultSet.next()) {
                         queryTableColumns.add(resultSet.getString("name"));
                     }
+                    if (queryTableColumns.size() == 0) {
+                        JOptionPane.showMessageDialog(new Frame(), "ERROR Query");
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -181,11 +196,6 @@ public class SQLiteViewer extends JFrame {
 
     private void createTableModelFromQuery() {
         String url = "jdbc:sqlite:" + fileNameTextField.getText(); //database path
-
-        //check if query text box initiated, then get the query
-        if (tablesComboBox.getItemCount() > 0) {
-            queryTextArea.setText("SELECT * FROM " + tablesComboBox.getSelectedItem() + ";");
-        }
         String query = queryTextArea.getText();
 
         //set data base source
@@ -204,6 +214,9 @@ public class SQLiteViewer extends JFrame {
                             tmp.add(resultSet.getString(colsIndex));
                         }
                         queryTableData.add(tmp);
+                    }
+                    if (queryTableData.size() == 0 && queryTableColumns.size() == 0) {
+                        JOptionPane.showMessageDialog(new Frame(), "ERROR Query");
                     }
                     dataBaseTableModel = new DataBaseTableModel(queryTableColumns, queryTableData);
                 }
